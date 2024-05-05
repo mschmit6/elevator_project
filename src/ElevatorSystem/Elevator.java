@@ -8,8 +8,6 @@ package ElevatorSystem;
 
 // Imports
 import java.util.ArrayList;
-import ElevatorSystem.ElevatorState;
-import ElevatorSystem.StopRequest;
 
 public class Elevator {
 
@@ -25,16 +23,16 @@ public class Elevator {
      * \param drop_off_time Amount of time for which the doors stay open when picking up/dropping off [sec]
      * \param time_between_floors Time it takes the elevator to move between floors [sec]
      */
-    public Elevator(int num_floors, double drop_off_time, double time_between_floors) {
+    public Elevator(int num_floors, double drop_off_time, double time_between_floors) throws IllegalArgumentException {
         // Error Checking
         if (num_floors <= 1) {
-            throw new Exception("Elevator() - num_floors value must be greater than or equal to 2.");
+            throw new IllegalArgumentException("Elevator() - num_floors value must be greater than or equal to 2.");
         }
         if (drop_off_time <= 0.) {
-            throw new Exception("Elevator() - drop_off_time value must be greater than 0.");
+            throw new IllegalArgumentException("Elevator() - drop_off_time value must be greater than 0.");
         }
         if (time_between_floors <= 0.) {
-            throw new Exception("Elevator() - time_between_floors value must be greater than 0.");
+            throw new IllegalArgumentException("Elevator() - time_between_floors value must be greater than 0.");
         }
 
         // Set values
@@ -43,7 +41,8 @@ public class Elevator {
         this.drop_off_time_ = drop_off_time;
         this.time_between_floors_ = time_between_floors;
         this.elevator_state_ = ElevatorState.NEUTRAL;
-        this.queue_ = new ArrayList<Integer>();
+        this.asc_queue_ = new ArrayList<Integer>();
+        this.des_queue_ = new ArrayList<Integer>();
     }
 
 
@@ -101,10 +100,10 @@ public class Elevator {
      *
      * \param floor Floor of the requested stop
      */
-    public void add_stop_request(int floor) {
+    public void add_stop_request(int floor) throws IllegalArgumentException  {
         // Error Checking on floor request
         if (floor < 1 || floor > num_floors_ ) {
-            throw new Exception("Elevator.add_stop_request() - floor number must be between 1 and num_floors.");
+            throw new IllegalArgumentException("Elevator.add_stop_request() - floor number must be between 1 and num_floors.");
         }
 
         // Add stop to the appropriate queue based on if it requires the elevator to ascend or descend
@@ -122,10 +121,10 @@ public class Elevator {
      * \param floor Floor of the requested stop
      * \param queue Queue to add the stop to
      */
-    private void add_stop_to_queue(int floor, ArrayList<int> queue) {
+    private void add_stop_to_queue(int floor, ArrayList<Integer> queue) {
         // Check to make sure the listed floor isn't already in the queue
         boolean duplicate = false;
-        for (int floor_req in asc_queue_) {
+        for (int floor_req : asc_queue_) {
             if (floor_req == floor) {
                 duplicate = true;
                 break;
@@ -147,6 +146,6 @@ public class Elevator {
     private double drop_off_time_;          //!< Amount of time for which the doors stay open when picking up/dropping off [sec]
     private double time_between_floors_;    //!< Time it takes the elevator to move between floors [sec]
     private ElevatorState elevator_state_;  //!< Defines the state of the current elevator
-    private ArrayList<int> asc_queue_;      //!< Queue defining stop requests in the ascending direction
-    private ArrayList<int> des_queue_;      //!< Queue defining stop requests in the ascending direction
+    private ArrayList<Integer> asc_queue_;  //!< Queue defining stop requests in the ascending direction
+    private ArrayList<Integer> des_queue_;   //!< Queue defining stop requests in the ascending direction
 }

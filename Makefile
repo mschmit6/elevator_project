@@ -17,7 +17,7 @@ $(OUTPUT)/%.class: $(SOURCE)/%.java | $(build_dirs)
 	javac -cp $(CLASS_PATH) -d $(OUTPUT) $<
 
 run: $(classes)
-	cd $(OUTPUT); java Main
+	cd $(OUTPUT); java ElevatorExample
 
 clean:
-	rm -vrf $(OUTPUT)/
+	rm -vrf $(OUTPUT)
