@@ -18,36 +18,6 @@ public class Elevator {
     //--------------------------------------
 
     /*!
-     * \brief Construct an Elevator object, specifying the number of floors that it operates on, the drop off time,
-     * and time it takes to move between floors
-     *
-     * \param num_floors Number of floors that the elevator operates on
-     * \param drop_off_time Amount of time for which the doors stay open when picking up/dropping off [sec]
-     * \param time_between_floors Time it takes the elevator to move between floors [sec]
-     */
-    public Elevator(int num_floors, double drop_off_time, double time_between_floors) throws IllegalArgumentException {
-        // Error Checking
-        if (num_floors <= 1) {
-            throw new IllegalArgumentException("Elevator() - num_floors value must be greater than or equal to 2.");
-        }
-        if (drop_off_time <= 0.) {
-            throw new IllegalArgumentException("Elevator() - drop_off_time value must be greater than 0.");
-        }
-        if (time_between_floors <= 0.) {
-            throw new IllegalArgumentException("Elevator() - time_between_floors value must be greater than 0.");
-        }
-
-        // Set values
-        this.num_floors_ = num_floors;
-        this.cur_floor_ = 1;
-        this.drop_off_time_ = drop_off_time;
-        this.time_between_floors_ = time_between_floors;
-        this.elevator_state_ = ElevatorState.NEUTRAL;
-        this.asc_queue_ = new PriorityQueue<Integer>();
-        this.des_queue_ = new PriorityQueue<Integer>((a, b) -> b - a);
-    }
-
-    /*!
      * \brief Construct an Elevator object, specifying the number of floors that it operates on
      *
      * \note The drop_off_time defaults to 60 seconds, and time_between_floors defaults to 30 seconds
@@ -61,18 +31,20 @@ public class Elevator {
         }
 
         // Set values
-        this.num_floors_ = num_floors;
-        this.cur_floor_ = 1;
-        this.drop_off_time_ = 60.0;
-        this.time_between_floors_ = 30.0;
-        this.elevator_state_ = ElevatorState.NEUTRAL;
-        this.asc_queue_ = new PriorityQueue<Integer>((a, b) -> b - a);
-        this.des_queue_ = new PriorityQueue<Integer>((a, b) -> b - a);
+        time_ = 0;
+        num_floors_ = num_floors;
+        cur_floor_ = 1;                                 // Elevator starts on the first floor
+        drop_off_time_unit_ = 2;                        // An elevator will stay at a stop for 2 time steps
+        move_time_unit_ = 1;                            // It takes the elevator one time step to move one floor
+        elevator_state_ = ElevatorState.INACTIVE;       // Elevator starts out inactive
+        at_stop_count_ = 0;
+        asc_queue_ = new PriorityQueue<Integer>();
+        des_queue_ = new PriorityQueue<Integer>((a, b) -> b - a);
     }
 
 
     //--------------------------------------
-    // Class Methods
+    // Public Class Methods
     //--------------------------------------
 
     /*!
@@ -82,15 +54,6 @@ public class Elevator {
      */
     public int get_current_floor() {
         return cur_floor_;
-    }
-
-    /*!
-     * \brief Set the current floor that the elevator is at
-     *
-     * \param cur_floor The current floor that the elevator is at
-     */
-    public void set_current_floor(int cur_floor) {
-        cur_floor_ = cur_floor;
     }
 
     /*!
@@ -112,24 +75,6 @@ public class Elevator {
     }
 
     /*!
-     * \brief Return the amount of time for which the doors stay open when picking up/dropping off
-     *
-     * \return The amount of time for which the doors stay open when picking up/dropping off [sec]
-     */
-    public double get_drop_off_time() {
-        return drop_off_time_;
-    }
-
-    /*!
-     * \brief Return time it takes the elevator to move between floors
-     *
-     * \return The time it takes the elevator to move between floors [sec]
-     */
-    public double get_time_between_floors() {
-        return time_between_floors_;
-    }
-
-    /*!
      * \brief Return the state of the current elevator
      *
      * \return The state of the current elevator
@@ -138,31 +83,67 @@ public class Elevator {
         return elevator_state_;
     }
 
-    /*!
-     * \brief Provides an estimate for how long it would take this Elevator to get to the requested floor
-     */
-    public double get_time_to_stop(int floor) throws IllegalArgumentException {
-
-
-        return 0;
-    }
 
     /*!
-     * \brief Return the queue of stops in the ascending direction
+     * \brief Step one time step into the future, returning the floor that the elevator ends up at
      *
-     * \return The queue of stops in the ascending direction
+     * \return The floor that the elevator is at after the time step
      */
-    public PriorityQueue<Integer> get_ascending_queue() {
-        return asc_queue_;
-    }
+    public int step() {
+        // Increment the current time by one time unit
+        time_ += 1;
 
-    /*!
-     * \brief Return the queue of stops in the descending direction
-     *
-     * \return The queue of stops in the descending direction
-     */
-    public PriorityQueue<Integer> get_descending_queue() {
-        return des_queue_;
+        switch (elevator_state_) {
+            case ElevatorState.INACTIVE: {
+                break;
+            }
+            case ElevatorState.ASCENDING: {
+                if (cur_floor_ == asc_queue_.peek()) {
+                    // Elevator is stopping at a drop off point
+                    at_stop_count_ += 1;
+
+                    // If we have reached the max stop time, so remove this stip from the queue
+                    if (at_stop_count_ == drop_off_time_unit_) {
+                        // Remove the stop and reset the at_stop_count
+                        asc_queue_.poll();
+                        at_stop_count_ = 0;
+
+                        // Update the elevator state, if necessary
+                        if (asc_queue_.size() == 0) {
+                            elevator_state_ = des_queue_.size() > 0 ? ElevatorState.DESCENDING : ElevatorState.INACTIVE;
+                        }
+                    }
+                } else {
+                    // Moves one floor in a given time step
+                    cur_floor_ += 1;
+                }
+                break;
+            }
+            case ElevatorState.DESCENDING: {
+                if (cur_floor_ == des_queue_.peek()) {
+                    // Elevator is stopping at a drop off point
+                    at_stop_count_ += 1;
+
+                    // If we have reached the max stop time, so remove this stip from the queue
+                    if (at_stop_count_ == drop_off_time_unit_) {
+                        // Remove the stop and reset the at_stop_count
+                        des_queue_.poll();
+                        at_stop_count_ = 0;
+
+                        // Update the elevator state, if necessary
+                        if (des_queue_.size() == 0) {
+                            elevator_state_ = asc_queue_.size() > 0 ? ElevatorState.ASCENDING : ElevatorState.INACTIVE;
+                        }
+                    }
+                } else {
+                    // Moves one floor in a given time step
+                    cur_floor_ -= 1;
+                }
+                break;
+            }
+        }
+
+        return cur_floor_;
     }
 
     /*!
@@ -180,8 +161,19 @@ public class Elevator {
         // Note: If you are at the current floor nothing will happen
         if (floor > cur_floor_ && !asc_queue_.contains(floor)) {
             asc_queue_.add(floor);
+
+            // Update the elevator state if it is inactive to set the direction for the next step
+            if (elevator_state_ == ElevatorState.INACTIVE) {
+                elevator_state_ = ElevatorState.ASCENDING;
+            }
+
         } else if (floor < cur_floor_ && !des_queue_.contains(floor)) {
             des_queue_.add(floor);
+
+            // Update the elevator state if it is inactive to set the direction for the next step
+            if (elevator_state_ == ElevatorState.INACTIVE) {
+                elevator_state_ = ElevatorState.DESCENDING;
+            }
         }
     }
 
@@ -193,21 +185,21 @@ public class Elevator {
      *
      * \return Estimated time to reach the target floor
      */
-    public double estimate_time_to_floor(int tgt_floor) {
+    public int estimate_time_to_floor(int tgt_floor) {
         // If you are already at the specified floor, return 0
         if (tgt_floor == cur_floor_) {
-            return 0.0;
+            return 0;
         }
 
         // Determine which direction you would have to go to get to the target floor
         DirectionRequest direction = tgt_floor > cur_floor_ ? DirectionRequest.ASCENDING : DirectionRequest.DESCENDING;
 
         // Compute the expected amount of time it would take to get to the tgt_floor
-        double elapsed_time = 0.;
+        int elapsed_time = 0;
         switch (elevator_state_) {
-            case ElevatorState.NEUTRAL: {
+            case ElevatorState.INACTIVE: {
                 // No other stops, so time to stop is just the time to travel to the target floor
-                elapsed_time = Math.abs(tgt_floor - cur_floor_) * time_between_floors_;
+                elapsed_time = Math.abs(tgt_floor - cur_floor_) * move_time_unit_;
             }
             case ElevatorState.ASCENDING: {
                 int start_floor = cur_floor_;
@@ -242,6 +234,10 @@ public class Elevator {
         return elapsed_time;
     }
 
+    //--------------------------------------
+    // Private Class Methods
+    //--------------------------------------
+
     /*!
      * \brief Evaluate the amount of time it would take to get through the current queue of stops
      *
@@ -250,14 +246,14 @@ public class Elevator {
      * \return A pair containign the Amount of time it would take to get through the current queue of stops,
      * and the last floor that was stopped at
      */
-    public QueueEvaluation evaluate_queue(PriorityQueue<Integer> stop_queue, int start_floor, int stop_floor) {
+    private QueueEvaluation evaluate_queue(PriorityQueue<Integer> stop_queue, int start_floor, int stop_floor) {
         // If you are starting at the requested stop floor, return 0 for no time elapsed
         if (start_floor == stop_floor) {
             return new QueueEvaluation(0, start_floor);
         }
 
         // Initialize elapsed time and current floor
-        double elapsed_time = 0.;
+        int elapsed_time = 0;
         int cur_floor = start_floor;
 
         // Sum the time it would take to get through the queue
@@ -266,13 +262,13 @@ public class Elevator {
             // Break early if you've reached the stop floor
             if (floor == stop_floor) {
                 // Update time required to get to the new floor only, but don't add in stop time
-                elapsed_time += Math.abs(floor - cur_floor) * time_between_floors_;
+                elapsed_time += Math.abs(floor - cur_floor) * move_time_unit_;
                 break;
             }
 
             // Compute elapsed time. Assume no elapsed time if you are already at the floor from the queue
             if (floor != cur_floor) {
-                elapsed_time += drop_off_time_ + Math.abs(floor - cur_floor) * time_between_floors_;
+                elapsed_time += drop_off_time_unit_ + Math.abs(floor - cur_floor) * move_time_unit_;
             }
             cur_floor = floor;
         }
@@ -282,22 +278,24 @@ public class Elevator {
 
     private class QueueEvaluation {
 
-        QueueEvaluation(double elapsed_time, int cur_floor) {
+        QueueEvaluation(int elapsed_time, int cur_floor) {
             this.elapsed_time = elapsed_time;
             this.cur_floor = cur_floor;
         }
-        public double elapsed_time;
+        public int elapsed_time;
         public int cur_floor;
     }
     //--------------------------------------
     // Class Attributes
     //--------------------------------------
 
-    private int num_floors_;                //!< Number of floors that the elevator operates on
-    private int cur_floor_;                 //!< The current floor that the elevator is at
-    private double drop_off_time_;          //!< Amount of time for which the doors stay open when picking up/dropping off [sec]
-    private double time_between_floors_;    //!< Time it takes the elevator to move between floors [sec]
-    private ElevatorState elevator_state_;  //!< Defines the state of the current elevator
+    private int time_;                          //!< Time, stored as integer number of "time units"
+    private int num_floors_;                    //!< Number of floors that the elevator operates on
+    private int cur_floor_;                     //!< The current floor that the elevator is at
+    private int drop_off_time_unit_;            //!< Amount of time for which the doors stay open when picking up/dropping off [sec]
+    private int move_time_unit_;                //!< Time it takes the elevator to move between floors [sec]
+    private ElevatorState elevator_state_;      //!< Defines the state of the current elevator
+    private int at_stop_count_;                 //!< Integer indicating number of time counts that the elevator has been at a stop for
     private PriorityQueue<Integer> asc_queue_;  //!< Queue defining stop requests in the ascending direction
-    private PriorityQueue<Integer> des_queue_;   //!< Queue defining stop requests in the ascending direction
+    private PriorityQueue<Integer> des_queue_;  //!< Queue defining stop requests in the ascending direction
 }

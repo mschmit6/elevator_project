@@ -8,7 +8,7 @@ package ElevatorSystem;
 
 //! Defines enumeration specifying the state of a given elevator
 public enum ElevatorState {
-    NEUTRAL,        //!< Elevator is stationary or neutral
+    INACTIVE,       //!< Elevator is stationary or inactive
     ASCENDING,      //!< Elevator is ascending
     DESCENDING      //!< Elevator is descending
 }

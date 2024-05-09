@@ -17,7 +17,8 @@ $(OUTPUT)/%.class: $(SOURCE)/%.java | $(build_dirs)
 	javac -cp $(CLASS_PATH) -d $(OUTPUT) $<
 
 run: $(classes)
-	cd $(OUTPUT); java ElevatorExample
+	cd $(OUTPUT); java ElevatorTest $(ARGS)
+
 
 clean:
 	rm -vrf $(OUTPUT)
