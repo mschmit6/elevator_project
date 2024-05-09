@@ -22,6 +22,9 @@ test_elevator: $(classes)
 test_controller: $(classes)
 	cd $(OUTPUT); java ElevatorControllerTest $(ARGS)
 
+test_stop_request: $(classes)
+	cd $(OUTPUT); java StopRequestTest $(ARGS)
+
 
 clean:
 	rm -vrf $(OUTPUT)

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 // Elevator System imports
 import ElevatorSystem.Elevator;
+import ElevatorSystem.StopRequest;
 
 public class ElevatorController {
 
@@ -90,7 +91,7 @@ public class ElevatorController {
     public boolean is_active() {
         boolean active = false;
         for (Elevator elevator : elevators_) {
-            if (elevator.get_elevator_state() != ElevatorState.INACTIVE) {
+            if (elevator.get_elevator_state() != ElevatorState.IDLE) {
                 active = true;
                 break;
             }
@@ -102,11 +103,11 @@ public class ElevatorController {
     /*!
      * \brief Add a stop to an elevator within the system.
      *
-     * \param floor Floor to stop on
+     * \param stop Stop request specifying
      */
-    public void add_stop(int floor) throws IllegalArgumentException  {
-        // Error Checking on floor request
-        if (floor < 1 || floor > num_floors_ ) {
+    public void add_stop(StopRequest stop) throws IllegalArgumentException  {
+        // Error Checking on stop request
+        if (stop.get_pick_up_floor() < 1 || stop.get_pick_up_floor() > num_floors_ ) {
             throw new IllegalArgumentException("Elevator.add_stop() - floor number must be between 1 and num_floors.");
         }
 
@@ -115,8 +116,8 @@ public class ElevatorController {
         int min_time = 0;
 
         for (Elevator elevator : elevators_) {
-            // Get the estimated time to reach the floor
-            int estimated_time = elevator.estimate_time_to_stop(floor);
+            // Get the estimated time to reach the first floor of the stop request
+            int estimated_time = elevator.estimate_time_to_stop(stop);
             if (best_elevator == null || estimated_time < min_time) {
                 best_elevator = elevator;
                 min_time = estimated_time;
@@ -125,7 +126,7 @@ public class ElevatorController {
 
         // Add the stop
         if (best_elevator != null) {
-            best_elevator.add_stop(floor);
+            best_elevator.add_stop(stop);
         }
     }
 

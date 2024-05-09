@@ -1,9 +1,10 @@
 // Standard Library Imports
 import java.util.PriorityQueue;
 
-// Elevator Sytem imports
+// Elevator System imports
 import ElevatorSystem.Elevator;
 import ElevatorSystem.ElevatorState;
+import ElevatorSystem.StopRequest;
 
 // Attempted to set up junit, but that wasn't working so made an example to mimic what would be the junit test
 public class ElevatorTest {
@@ -42,6 +43,10 @@ public class ElevatorTest {
                     test_ascending_descending_with_stop_added(true);
                     break;
                 }
+                case "5": {
+                    test_ascending_back_to_ground_floor(true);
+                    break;
+                }
                 default: {
                     throw new Exception("Test case must be a number from 1 to 4.");
                 }
@@ -66,7 +71,8 @@ public class ElevatorTest {
         Elevator elevator = get_default_elevator();
 
         // Estimate the time to get to the first floor
-        int time_to_floor = elevator.estimate_time_to_stop(1);
+        StopRequest stop_req = new StopRequest(1);
+        int time_to_floor = elevator.estimate_time_to_stop(stop_req);
 
         if (debug) {
             System.out.println("Time to floor 1: " + Integer.toString(time_to_floor));
@@ -84,7 +90,8 @@ public class ElevatorTest {
         Elevator elevator = get_default_elevator();
 
         // Set a stop
-        elevator.add_stop(4);
+        StopRequest stop_req = new StopRequest(4);
+        elevator.add_stop(stop_req);
         if (debug) {
             System.out.println("Adding stop on floor 4.");
         }
@@ -108,7 +115,7 @@ public class ElevatorTest {
         }
 
         // This would normally be a junit assert statement, but didn't have time to get that set up
-        if (elevator.get_elevator_state() != ElevatorState.INACTIVE) {
+        if (elevator.get_elevator_state() != ElevatorState.IDLE) {
             throw new Exception("The elevator should now be inactive.");
         }
     }
@@ -120,7 +127,8 @@ public class ElevatorTest {
         int step = 0;
 
         // Set a stop on the eighth floor
-        elevator.add_stop(8);
+        StopRequest stop_req1 = new StopRequest(8);
+        elevator.add_stop(stop_req1);
         if (debug) {
             System.out.println("Adding stop on floor 8.");
         }
@@ -136,7 +144,8 @@ public class ElevatorTest {
         }
 
         // Add stop on 3rd floor
-        elevator.add_stop(3);
+        StopRequest stop_req2 = new StopRequest(3);
+        elevator.add_stop(stop_req2);
         if (debug) {
             System.out.println("Adding stop on floor 3.");
         }
@@ -161,7 +170,7 @@ public class ElevatorTest {
         }
 
         // This would normally be a junit assert statement, but didn't have time to get that set up
-        if (elevator.get_elevator_state() != ElevatorState.INACTIVE) {
+        if (elevator.get_elevator_state() != ElevatorState.IDLE) {
             throw new Exception("The elevator should now be inactive.");
         }
     }
@@ -173,7 +182,8 @@ public class ElevatorTest {
         int step = 0;
 
         // Set a stop on the eighth floor
-        elevator.add_stop(8);
+        StopRequest stop_req1 = new StopRequest(8);
+        elevator.add_stop(stop_req1);
         if (debug) {
             System.out.println("Adding stop on floor 8.");
         }
@@ -189,13 +199,15 @@ public class ElevatorTest {
         }
 
         // Add stop on 3rd floor
-        elevator.add_stop(3);
+        StopRequest stop_req2 = new StopRequest(3);
+        elevator.add_stop(stop_req2);
         if (debug) {
             System.out.println("Adding stop on floor 3.");
         }
 
         // Add another stop on the 6th floor
-        elevator.add_stop(6);
+        StopRequest stop_req3 = new StopRequest(6);
+        elevator.add_stop(stop_req3);
         if (debug) {
             System.out.println("Adding stop on floor 6.");
         }
@@ -220,7 +232,44 @@ public class ElevatorTest {
         }
 
         // This would normally be a junit assert statement, but didn't have time to get that set up
-        if (elevator.get_elevator_state() != ElevatorState.INACTIVE) {
+        if (elevator.get_elevator_state() != ElevatorState.IDLE) {
+            throw new Exception("The elevator should now be inactive.");
+        }
+    }
+
+
+    //! Test the situation where the elevator is purely ascending
+    public static void test_ascending_back_to_ground_floor(boolean debug) throws Exception {
+        // Get default elevator
+        Elevator elevator = get_default_elevator();
+
+        // Set a stop
+        StopRequest stop_req = new StopRequest(4, 1);
+        elevator.add_stop(stop_req);
+        if (debug) {
+            System.out.println("Adding stop on floor 4, then return to floor 1.");
+        }
+
+        int[] expected_floors = {2, 3, 4, 4, 4, 3, 2, 1, 1, 1};
+        int step = 0;
+
+        for (int k = 0; k < expected_floors.length; k++) {
+            // Step the elevator
+            int cur_floor = elevator.step();
+            step += 1;
+
+            if (debug) {
+                System.out.println("Step: " + Integer.toString(step) + ", Current Floor: " + Integer.toString(cur_floor));
+            }
+
+            // This would normally be a junit assert statement, but didn't have time to get that set up
+            if (cur_floor != expected_floors[k]) {
+                throw new Exception("Should be on floor " + Integer.toString(expected_floors[k]));
+            }
+        }
+
+        // This would normally be a junit assert statement, but didn't have time to get that set up
+        if (elevator.get_elevator_state() != ElevatorState.IDLE) {
             throw new Exception("The elevator should now be inactive.");
         }
     }

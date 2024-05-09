@@ -1,10 +1,11 @@
 // Standard Library Imports
-import java.util.PriorityQueue;
+import java.util.HashSet;
 
-// Elevator Sytem imports
+// Elevator System imports
 import ElevatorSystem.Elevator;
 import ElevatorSystem.ElevatorController;
 import ElevatorSystem.ElevatorState;
+import ElevatorSystem.StopRequest;
 
 // Attempted to set up junit, but that wasn't working so made an example to mimic what would be the junit test
 public class ElevatorControllerTest {
@@ -27,6 +28,7 @@ public class ElevatorControllerTest {
                     break;
                 }
                 case "3": {
+                    test_complex_scenario(true);
                     break;
                 }
                 case "4": {
@@ -69,8 +71,7 @@ public class ElevatorControllerTest {
         }
     }
 
-
-    //! Test the situation where the elevator shouldn't have to move, as its already at the right floor
+    //! Test the situation where multiple stops are requested at the same time
     public static void test_two_stops(boolean debug) throws Exception {
         // Get default elevator
         ElevatorController elevator_controller = get_default_elevator_controller();
@@ -81,8 +82,11 @@ public class ElevatorControllerTest {
         }
 
         // Add a stop on the 6th and 7th floors
-        elevator_controller.add_stop(6);
-        elevator_controller.add_stop(7);
+        StopRequest stop_req1 = new StopRequest(6);
+        elevator_controller.add_stop(stop_req1);
+
+        StopRequest stop_req2 = new StopRequest(7);
+        elevator_controller.add_stop(stop_req2);
 
         if (debug) {
             elevator_controller.display_status();
@@ -98,7 +102,57 @@ public class ElevatorControllerTest {
         }
 
         // Now add a stop at the 5th floor, which should trigger elevator 1 to move down
-        elevator_controller.add_stop(5);
+        StopRequest stop_req3 = new StopRequest(5);
+        elevator_controller.add_stop(stop_req3);
+
+        // Step through until the whole system is inactive
+        while (elevator_controller.is_active()) {
+            elevator_controller.step();
+
+            if(debug) {
+                elevator_controller.display_status();
+            }
+        }
+    }
+
+    //! Test the situation where multiple stops are requested with different origin/destination floors
+    public static void test_complex_scenario(boolean debug) throws Exception {
+        // Get default elevator
+        ElevatorController elevator_controller = get_default_elevator_controller();
+
+        if (debug) {
+            System.out.println("Number of floors: " + Integer.toString(elevator_controller.get_num_floors()));
+            System.out.println("Number of elevators: " + Integer.toString(elevator_controller.get_num_elevators()));
+        }
+
+        // Add a stop on the 6th and 7th floors
+        HashSet<Integer> dest_floors = new HashSet<Integer>() {{
+            add(6);
+            add(7);
+        }};
+        StopRequest stop_req1 = new StopRequest(1, dest_floors);
+        elevator_controller.add_stop(stop_req1);
+
+        // Simultaneously add another stop requesting pickup from floor 7 and drop off at floor 2
+        StopRequest stop_req2 = new StopRequest(7, 2);
+        elevator_controller.add_stop(stop_req2);
+
+        if (debug) {
+            elevator_controller.display_status();
+        }
+
+        // Step through until the whole system is inactive
+        while (elevator_controller.is_active()) {
+            elevator_controller.step();
+
+            if(debug) {
+                elevator_controller.display_status();
+            }
+        }
+
+        // Now add a stop at the 5th floor, which should trigger elevator 1 to move down
+        StopRequest stop_req3 = new StopRequest(5, 1);
+        elevator_controller.add_stop(stop_req3);
 
         // Step through until the whole system is inactive
         while (elevator_controller.is_active()) {
