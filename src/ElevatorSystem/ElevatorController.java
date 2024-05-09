@@ -100,9 +100,9 @@ public class ElevatorController {
     }
 
     /*!
-     * \brief Add a requested stop to an elevator within the system.
+     * \brief Add a stop to an elevator within the system.
      *
-     * \param floor Floor of the requested stop
+     * \param floor Floor to stop on
      */
     public void add_stop(int floor) throws IllegalArgumentException  {
         // Error Checking on floor request
