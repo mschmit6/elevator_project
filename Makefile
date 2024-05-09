@@ -16,8 +16,11 @@ $(build_dirs):
 $(OUTPUT)/%.class: $(SOURCE)/%.java | $(build_dirs)
 	javac -cp $(CLASS_PATH) -d $(OUTPUT) $<
 
-run: $(classes)
+test_elevator: $(classes)
 	cd $(OUTPUT); java ElevatorTest $(ARGS)
+
+test_controller: $(classes)
+	cd $(OUTPUT); java ElevatorControllerTest $(ARGS)
 
 
 clean:

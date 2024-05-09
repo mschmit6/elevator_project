@@ -57,7 +57,7 @@ public class ElevatorTest {
     private static Elevator get_default_elevator() {
         // Make elevator
         int num_floors = 10;
-        return new Elevator(num_floors);
+        return new Elevator("Default Elevator", num_floors);
     }
 
     //! Test the situation where the elevator shouldn't have to move, as its already at the right floor
@@ -66,7 +66,7 @@ public class ElevatorTest {
         Elevator elevator = get_default_elevator();
 
         // Estimate the time to get to the first floor
-        int time_to_floor = elevator.estimate_time_to_floor(1);
+        int time_to_floor = elevator.estimate_time_to_stop(1);
 
         if (debug) {
             System.out.println("Time to floor 1: " + Integer.toString(time_to_floor));
@@ -84,7 +84,7 @@ public class ElevatorTest {
         Elevator elevator = get_default_elevator();
 
         // Set a stop
-        elevator.add_stop_request(4);
+        elevator.add_stop(4);
         if (debug) {
             System.out.println("Adding stop on floor 4.");
         }
@@ -120,7 +120,7 @@ public class ElevatorTest {
         int step = 0;
 
         // Set a stop on the eighth floor
-        elevator.add_stop_request(8);
+        elevator.add_stop(8);
         if (debug) {
             System.out.println("Adding stop on floor 8.");
         }
@@ -136,7 +136,7 @@ public class ElevatorTest {
         }
 
         // Add stop on 3rd floor
-        elevator.add_stop_request(3);
+        elevator.add_stop(3);
         if (debug) {
             System.out.println("Adding stop on floor 3.");
         }
@@ -173,7 +173,7 @@ public class ElevatorTest {
         int step = 0;
 
         // Set a stop on the eighth floor
-        elevator.add_stop_request(8);
+        elevator.add_stop(8);
         if (debug) {
             System.out.println("Adding stop on floor 8.");
         }
@@ -189,13 +189,13 @@ public class ElevatorTest {
         }
 
         // Add stop on 3rd floor
-        elevator.add_stop_request(3);
+        elevator.add_stop(3);
         if (debug) {
             System.out.println("Adding stop on floor 3.");
         }
 
         // Add another stop on the 6th floor
-        elevator.add_stop_request(6);
+        elevator.add_stop(6);
         if (debug) {
             System.out.println("Adding stop on floor 6.");
         }

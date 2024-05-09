@@ -22,15 +22,17 @@ public class Elevator {
      *
      * \note The drop_off_time defaults to 60 seconds, and time_between_floors defaults to 30 seconds
      *
+     * \param name Name of the elevator
      * \param num_floors Number of floors that the elevator operates on
      */
-    public Elevator(int num_floors) {
+    public Elevator(String name, int num_floors) {
         // Error Checking
         if (num_floors <= 1) {
             throw new IllegalArgumentException("Elevator() - num_floors value must be greater than or equal to 2.");
         }
 
         // Set values
+        name_ = name;
         time_ = 0;
         num_floors_ = num_floors;
         cur_floor_ = 1;                                 // Elevator starts on the first floor
@@ -47,6 +49,14 @@ public class Elevator {
     // Public Class Methods
     //--------------------------------------
 
+    /*!
+     * \brief Return the name of the elevator
+     *
+     * \return The name of the elevator
+     */
+    public String get_name() {
+        return name_;
+    }
     /*!
      * \brief Return the current floor that the elevator is at
      *
@@ -151,10 +161,10 @@ public class Elevator {
      *
      * \param floor Floor of the requested stop
      */
-    public void add_stop_request(int floor) throws IllegalArgumentException  {
+    public void add_stop(int floor) throws IllegalArgumentException  {
         // Error Checking on floor request
         if (floor < 1 || floor > num_floors_ ) {
-            throw new IllegalArgumentException("Elevator.add_stop_request() - floor number must be between 1 and " + Integer.toString(num_floors_) + ".");
+            throw new IllegalArgumentException("Elevator.add_stop() - floor number must be between 1 and " + Integer.toString(num_floors_) + ".");
         }
 
         // Add stop to the appropriate queue based on if it requires the elevator to ascend or descend
@@ -185,7 +195,7 @@ public class Elevator {
      *
      * \return Estimated time to reach the target floor
      */
-    public int estimate_time_to_floor(int tgt_floor) {
+    public int estimate_time_to_stop(int tgt_floor) {
         // If you are already at the specified floor, return 0
         if (tgt_floor == cur_floor_) {
             return 0;
@@ -200,6 +210,7 @@ public class Elevator {
             case ElevatorState.INACTIVE: {
                 // No other stops, so time to stop is just the time to travel to the target floor
                 elapsed_time = Math.abs(tgt_floor - cur_floor_) * move_time_unit_;
+                break;
             }
             case ElevatorState.ASCENDING: {
                 int start_floor = cur_floor_;
@@ -208,11 +219,16 @@ public class Elevator {
                     QueueEvaluation queue_eval = evaluate_queue(asc_queue_, cur_floor_, num_floors_ + 1);
                     elapsed_time = queue_eval.elapsed_time;
                     start_floor = queue_eval.cur_floor;
+
+                    // Compute time required to now descend to target floor
+                    queue_eval = evaluate_queue(des_queue_, start_floor, tgt_floor);
+                    elapsed_time += queue_eval.elapsed_time;
+                } else {
+                    // Compute time required to now ascend to the destination floor to target floor
+                    QueueEvaluation queue_eval = evaluate_queue(asc_queue_, start_floor, tgt_floor);
+                    elapsed_time += queue_eval.elapsed_time;
                 }
 
-                // Compute time required to now descend to target floor
-                QueueEvaluation queue_eval = evaluate_queue(des_queue_, start_floor, tgt_floor);
-                elapsed_time += queue_eval.elapsed_time;
                 break;
             }
             case ElevatorState.DESCENDING: {
@@ -222,11 +238,16 @@ public class Elevator {
                     QueueEvaluation queue_eval = evaluate_queue(des_queue_, cur_floor_, 0);
                     elapsed_time = queue_eval.elapsed_time;
                     start_floor = queue_eval.cur_floor;
+
+                    // Compute time required to now ascend to target floor
+                    queue_eval = evaluate_queue(asc_queue_, start_floor, tgt_floor);
+                    elapsed_time += queue_eval.elapsed_time;
+                } else {
+                    // Compute time required to now descend to target floor
+                    QueueEvaluation queue_eval = evaluate_queue(des_queue_, start_floor, tgt_floor);
+                    elapsed_time += queue_eval.elapsed_time;
                 }
 
-                // Compute time required to now ascend to target floor
-                QueueEvaluation queue_eval = evaluate_queue(asc_queue_, start_floor, tgt_floor);
-                elapsed_time += queue_eval.elapsed_time;
                 break;
             }
         }
@@ -289,6 +310,7 @@ public class Elevator {
     // Class Attributes
     //--------------------------------------
 
+    private String name_;                       //!< Name of the elevator
     private int time_;                          //!< Time, stored as integer number of "time units"
     private int num_floors_;                    //!< Number of floors that the elevator operates on
     private int cur_floor_;                     //!< The current floor that the elevator is at
